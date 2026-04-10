@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,11 +23,18 @@
     crossorigin="anonymous"></script>
 
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
       width: 100%;
       height: 100%;
-      background: #1e1e1e; /* match VSCode dark theme */
+      background: #1e1e1e;
+      /* match VSCode dark theme */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -55,6 +63,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="ad-wrapper">
@@ -62,12 +71,8 @@
       Bloco AdSense "display" responsivo.
       Substitua data-ad-client e data-ad-slot pelos seus valores.
     -->
-    <ins class="adsbygoogle"
-         style="display:block; width:100%; height:120px;"
-         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-         data-ad-slot="XXXXXXXXXX"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
+    <ins class="adsbygoogle" style="display:block; width:100%; height:120px;" data-ad-client="ca-pub-8502499446387888"
+      data-ad-slot="4259566981" data-ad-format="auto" data-full-width-responsive="true"></ins>
     <script>
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
@@ -83,8 +88,9 @@
       // Notifica o iframe pai (extensão) que carregou
       try {
         window.parent.postMessage({ type: 'ad-page-ready' }, '*');
-      } catch (_) {}
+      } catch (_) { }
     });
   </script>
 </body>
+
 </html>
