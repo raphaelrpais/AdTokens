@@ -1,0 +1,57 @@
+{
+  "name": "agent-ads",
+  "displayName": "Agent Ads",
+  "description": "Shows ads while your AI agent is thinking. Revenue goes back to you as tokens.",
+  "version": "0.1.0",
+  "publisher": "your-publisher-id",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentAds.showPanel",
+        "title": "Agent Ads: Show Ad Panel"
+      },
+      {
+        "command": "agentAds.hidePanel",
+        "title": "Agent Ads: Hide Ad Panel"
+      }
+    ],
+    "configuration": {
+      "title": "Agent Ads",
+      "properties": {
+        "agentAds.adPageUrl": {
+          "type": "string",
+          "default": "https://your-ad-page.com/ads",
+          "description": "URL of your hosted ad page (must contain AdSense or ad network script)"
+        },
+        "agentAds.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable ads during agent runs"
+        },
+        "agentAds.panelHeight": {
+          "type": "number",
+          "default": 160,
+          "description": "Height of the ad panel in pixels"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
