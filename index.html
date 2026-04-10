@@ -1,99 +1,67 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Ads – Hosted Page</title>
+  <title>Agent Ads</title>
 
-  <!--
-    ╔══════════════════════════════════════════════════════════════╗
-    ║  Esta página é hospedada no SEU domínio verificado.         ║
-    ║  O AdSense funciona aqui porque tem origem web real.        ║
-    ║  A extensão do VSCodium carrega esta página via iframe.     ║
-    ╚══════════════════════════════════════════════════════════════╝
-
-    1. Substitua o data-ad-client e data-ad-slot pelos seus do AdSense.
-    2. Hospede em https://seu-dominio.com/ads
-    3. Configure a URL em: VSCodium → Settings → Agent Ads → Ad Page URL
-  -->
-
-  <!-- Google AdSense script (substitua pelo seu publisher ID) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8502499446387888"
     crossorigin="anonymous"></script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      background: #1e1e1e;
-      /* match VSCode dark theme */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #1a1a1a;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-
-    /* AdSense responsive unit – ocupa todo o espaço do iframe */
-    .ad-wrapper {
-      width: 100%;
-      max-width: 400px;
-      padding: 4px;
+    .ad-wrapper { width: 100%; max-width: 400px; padding: 8px; }
+    .adsbygoogle { display: block; }
+    .pending {
+      width: 100%; padding: 20px 16px;
+      border: 1px dashed #2e2e2e; border-radius: 6px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px; text-align: center;
     }
-
-    /* Fallback estético enquanto o AdSense não carrega */
-    .ad-placeholder {
-      width: 100%;
-      height: 120px;
-      border: 1px dashed #444;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #555;
-      font-family: sans-serif;
-      font-size: 11px;
-    }
+    .pending .icon { font-size: 20px; opacity: 0.4; }
+    .pending .line1 { color: #4a4a4a; font-size: 11px; }
+    .pending .line2 { color: #333; font-size: 10px; }
+    .label { margin-top: 8px; font-size: 9px; color: #2e2e2e; text-align: center; }
   </style>
 </head>
-
 <body>
-  <p style="color:#666; font-size:11px; text-align:center; padding:8px;">
-    Suporte ao desenvolvedor
-  </p>
-
   <div class="ad-wrapper">
-    <!--
-      Bloco AdSense "display" responsivo.
-      Substitua data-ad-client e data-ad-slot pelos seus valores.
-    -->
-    <ins class="adsbygoogle" style="display:block; width:100%; height:120px;" data-ad-client="ca-pub-8502499446387888"
-      data-ad-slot="4259566981" data-ad-format="auto" data-full-width-responsive="true"></ins>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
+    <ins class="adsbygoogle"
+         style="display:block;width:100%;height:120px;"
+         data-ad-client="ca-pub-8502499446387888"
+         data-ad-slot="4259566981"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+
+    <div class="pending" id="pending">
+      <div class="icon">📡</div>
+      <div class="line1">Anúncio em breve</div>
+      <div class="line2">Site em análise pelo Google AdSense</div>
+    </div>
+
+    <div class="label">ads financiam tokens para você</div>
   </div>
 
   <script>
-    /*
-      Futuramente: postar eventos de impression/click de volta
-      para a extensão via window.parent.postMessage.
-      Por ora, o iframe reporta load via onload no lado da extensão.
-    */
+    (adsbygoogle = window.adsbygoogle || []).push({});
     window.addEventListener('load', () => {
-      // Notifica o iframe pai (extensão) que carregou
-      try {
-        window.parent.postMessage({ type: 'ad-page-ready' }, '*');
-      } catch (_) { }
+      setTimeout(() => {
+        const ins = document.querySelector('.adsbygoogle');
+        if (ins && ins.getAttribute('data-ad-status') === 'filled') {
+          document.getElementById('pending').style.display = 'none';
+        }
+      }, 2000);
     });
   </script>
 </body>
-
 </html>
