@@ -1,47 +1,29 @@
 {
   "name": "agent-ads",
   "displayName": "Agent Ads",
-  "description": "Shows ads while your AI agent is thinking. Revenue goes back to you as tokens.",
+  "description": "Shows ads while your AI agent is thinking.",
   "version": "0.1.0",
   "publisher": "your-publisher-id",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
+  "engines": { "vscode": "^1.85.0" },
   "categories": ["Other"],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
+  "activationEvents": ["onStartupFinished"],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "agentAds.showPanel",
-        "title": "Agent Ads: Show Ad Panel"
-      },
-      {
-        "command": "agentAds.hidePanel",
-        "title": "Agent Ads: Hide Ad Panel"
+        "command": "agentAds.focus",
+        "title": "Agent Ads: Mostrar Painel"
       }
     ],
-    "configuration": {
-      "title": "Agent Ads",
-      "properties": {
-        "agentAds.adPageUrl": {
-          "type": "string",
-          "default": "https://raphaelrpais.com/AdTokens/",
-          "description": "URL of your hosted ad page (must contain AdSense or ad network script)"
-        },
-        "agentAds.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable/disable ads during agent runs"
-        },
-        "agentAds.panelHeight": {
-          "type": "number",
-          "default": 160,
-          "description": "Height of the ad panel in pixels"
+    "views": {
+      "panel": [
+        {
+          "type": "webview",
+          "id": "agentAds.panel",
+          "name": "Agent Ads",
+          "visibility": "visible"
         }
-      }
+      ]
     }
   },
   "scripts": {
