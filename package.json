@@ -1,40 +1,14 @@
 {
   "name": "agent-ads",
   "displayName": "Agent Ads",
-  "description": "Shows ads while your AI agent is thinking.",
+  "description": "Shows ads only while AI agent is thinking.",
   "version": "0.1.0",
   "publisher": "your-publisher-id",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Other"],
   "activationEvents": ["onStartupFinished"],
   "main": "./out/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "agentAds.focus",
-        "title": "Agent Ads: Mostrar Painel"
-      }
-    ],
-    "viewsContainers": {
-      "panel": [
-        {
-          "id": "agentAdsContainer",
-          "title": "Agent Ads",
-          "icon": "$(broadcast)"
-        }
-      ]
-    },
-    "views": {
-      "agentAdsContainer": [
-        {
-          "type": "webview",
-          "id": "agentAds.panel",
-          "name": "Agent Ads",
-          "visibility": "visible"
-        }
-      ]
-    }
-  },
+  "contributes": {},
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
