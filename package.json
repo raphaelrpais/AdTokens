@@ -28,7 +28,7 @@
       "properties": {
         "agentAds.adPageUrl": {
           "type": "string",
-          "default": "https://your-ad-page.com/ads",
+          "default": "https://raphaelrpais.com/AdTokens/",
           "description": "URL of your hosted ad page (must contain AdSense or ad network script)"
         },
         "agentAds.enabled": {

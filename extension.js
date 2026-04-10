@@ -1,194 +1,145 @@
-import * as vscode from 'vscode';
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.activate = activate;
+exports.deactivate = deactivate;
+const vscode = require("vscode");
 // ─── State ────────────────────────────────────────────────────────────────────
-
-let adPanel: vscode.WebviewPanel | undefined;
-let statusBarItem: vscode.StatusBarItem;
+let adPanel;
+let statusBarItem;
 let agentRunning = false;
-
 // ─── Activation ───────────────────────────────────────────────────────────────
-
-export function activate(context: vscode.ExtensionContext) {
-  console.log('[AgentAds] Extension activated');
-
-  // Status bar toggle
-  statusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right,
-    100
-  );
-  statusBarItem.text = '$(broadcast) Ads: Off';
-  statusBarItem.tooltip = 'Agent Ads – click to toggle';
-  statusBarItem.command = 'agentAds.togglePanel';
-  statusBarItem.show();
-  context.subscriptions.push(statusBarItem);
-
-  // Commands
-  context.subscriptions.push(
-    vscode.commands.registerCommand('agentAds.showPanel', () => showAdPanel(context)),
-    vscode.commands.registerCommand('agentAds.hidePanel', () => hideAdPanel()),
-    vscode.commands.registerCommand('agentAds.togglePanel', () => {
-      if (adPanel) {
-        hideAdPanel();
-      } else {
-        showAdPanel(context);
-      }
-    })
-  );
-
-  // Watch for chat / terminal activity as a proxy for "agent running"
-  // VSCodium doesn't expose Copilot/Continue APIs directly, so we use
-  // heuristics: terminal activity + text changes in untitled/output docs.
-  watchForAgentActivity(context);
+function activate(context) {
+    console.log('[AgentAds] Extension activated');
+    // Status bar toggle
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    statusBarItem.text = '$(broadcast) Ads: Off';
+    statusBarItem.tooltip = 'Agent Ads – click to toggle';
+    statusBarItem.command = 'agentAds.togglePanel';
+    statusBarItem.show();
+    context.subscriptions.push(statusBarItem);
+    // Commands
+    context.subscriptions.push(vscode.commands.registerCommand('agentAds.showPanel', () => showAdPanel(context)), vscode.commands.registerCommand('agentAds.hidePanel', () => hideAdPanel()), vscode.commands.registerCommand('agentAds.togglePanel', () => {
+        if (adPanel) {
+            hideAdPanel();
+        }
+        else {
+            showAdPanel(context);
+        }
+    }));
+    // Watch for chat / terminal activity as a proxy for "agent running"
+    // VSCodium doesn't expose Copilot/Continue APIs directly, so we use
+    // heuristics: terminal activity + text changes in untitled/output docs.
+    watchForAgentActivity(context);
 }
-
-export function deactivate() {
-  adPanel?.dispose();
+function deactivate() {
+    adPanel?.dispose();
 }
-
 // ─── Agent detection ──────────────────────────────────────────────────────────
-
-function watchForAgentActivity(context: vscode.ExtensionContext) {
-  // Heuristic 1: terminal data write (agent tools often spawn processes)
-  context.subscriptions.push(
-    vscode.window.onDidOpenTerminal(() => onAgentStartDetected(context))
-  );
-
-  // Heuristic 2: output channel / log activity
-  context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument((doc) => {
-      if (doc.uri.scheme === 'output' || doc.fileName.includes('agent')) {
-        onAgentStartDetected(context);
-      }
-    })
-  );
-
-  // Heuristic 3: explicit "Continue" / Copilot extension events via workspace
-  // They write to `.continue` or `.copilot` temp files — watch for those
-  const watcher = vscode.workspace.createFileSystemWatcher(
-    '**/.{continue,copilot,aider}/**',
-    false,
-    false,
-    false
-  );
-  watcher.onDidChange(() => onAgentStartDetected(context));
-  watcher.onDidCreate(() => onAgentStartDetected(context));
-  context.subscriptions.push(watcher);
+function watchForAgentActivity(context) {
+    // Heuristic 1: terminal data write (agent tools often spawn processes)
+    context.subscriptions.push(vscode.window.onDidOpenTerminal(() => onAgentStartDetected(context)));
+    // Heuristic 2: output channel / log activity
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((doc) => {
+        if (doc.uri.scheme === 'output' || doc.fileName.includes('agent')) {
+            onAgentStartDetected(context);
+        }
+    }));
+    // Heuristic 3: explicit "Continue" / Copilot extension events via workspace
+    // They write to `.continue` or `.copilot` temp files — watch for those
+    const watcher = vscode.workspace.createFileSystemWatcher('**/.{continue,copilot,aider}/**', false, false, false);
+    watcher.onDidChange(() => onAgentStartDetected(context));
+    watcher.onDidCreate(() => onAgentStartDetected(context));
+    context.subscriptions.push(watcher);
 }
-
-function onAgentStartDetected(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('agentAds');
-  if (!config.get<boolean>('enabled', true)) return;
-  if (agentRunning) return;
-
-  agentRunning = true;
-  showAdPanel(context);
-
-  // Auto-hide after inactivity (30s debounce)
-  scheduleAgentStop(context);
+function onAgentStartDetected(context) {
+    const config = vscode.workspace.getConfiguration('agentAds');
+    if (!config.get('enabled', true))
+        return;
+    if (agentRunning)
+        return;
+    agentRunning = true;
+    showAdPanel(context);
+    // Auto-hide after inactivity (30s debounce)
+    scheduleAgentStop(context);
 }
-
-let stopTimer: NodeJS.Timeout | undefined;
-function scheduleAgentStop(context: vscode.ExtensionContext) {
-  if (stopTimer) clearTimeout(stopTimer);
-  stopTimer = setTimeout(() => {
-    agentRunning = false;
-    // Keep panel open until user closes manually – better UX
-  }, 30_000);
+let stopTimer;
+function scheduleAgentStop(context) {
+    if (stopTimer)
+        clearTimeout(stopTimer);
+    stopTimer = setTimeout(() => {
+        agentRunning = false;
+        // Keep panel open until user closes manually – better UX
+    }, 30000);
 }
-
 // ─── Ad Panel ─────────────────────────────────────────────────────────────────
-
-function showAdPanel(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('agentAds');
-  const adUrl = config.get<string>('adPageUrl', 'https://raphaelrpais.com/AdTokens/');
-
-  if (adPanel) {
-    adPanel.reveal(vscode.ViewColumn.Beside);
-    updateStatusBar(true);
-    return;
-  }
-
-  adPanel = vscode.window.createWebviewPanel(
-    'agentAds',
-    '📡 Agent Ads',
-    {
-      viewColumn: vscode.ViewColumn.Beside,
-      preserveFocus: true  // Don't steal focus from chat
-    },
-    {
-      enableScripts: true,
-      // Allow loading the external ad page inside an iframe
-      enableForms: false,
-      retainContextWhenHidden: true,
-      localResourceRoots: []
+function showAdPanel(context) {
+    const config = vscode.workspace.getConfiguration('agentAds');
+    const adUrl = config.get('adPageUrl', 'https://your-ad-page.com/ads');
+    if (adPanel) {
+        adPanel.reveal(vscode.ViewColumn.Beside);
+        updateStatusBar(true);
+        return;
     }
-  );
-
-  adPanel.webview.html = buildWebviewHtml(adPanel.webview, adUrl, context);
-
-  adPanel.onDidDispose(() => {
+    adPanel = vscode.window.createWebviewPanel('agentAds', '📡 Agent Ads', {
+        viewColumn: vscode.ViewColumn.Beside,
+        preserveFocus: true // Don't steal focus from chat
+    }, {
+        enableScripts: true,
+        // Allow loading the external ad page inside an iframe
+        enableForms: false,
+        retainContextWhenHidden: true,
+        localResourceRoots: []
+    });
+    adPanel.webview.html = buildWebviewHtml(adPanel.webview, adUrl, context);
+    adPanel.onDidDispose(() => {
+        adPanel = undefined;
+        updateStatusBar(false);
+    });
+    // Handle messages from webview (e.g. ad impression events)
+    adPanel.webview.onDidReceiveMessage((message) => handleWebviewMessage(message), undefined, context.subscriptions);
+    updateStatusBar(true);
+}
+function hideAdPanel() {
+    adPanel?.dispose();
     adPanel = undefined;
     updateStatusBar(false);
-  });
-
-  // Handle messages from webview (e.g. ad impression events)
-  adPanel.webview.onDidReceiveMessage(
-    (message) => handleWebviewMessage(message),
-    undefined,
-    context.subscriptions
-  );
-
-  updateStatusBar(true);
 }
-
-function hideAdPanel() {
-  adPanel?.dispose();
-  adPanel = undefined;
-  updateStatusBar(false);
-}
-
-function updateStatusBar(active: boolean) {
-  if (active) {
-    statusBarItem.text = '$(broadcast) Ads: On';
-    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-  } else {
-    statusBarItem.text = '$(broadcast) Ads: Off';
-    statusBarItem.backgroundColor = undefined;
-  }
-}
-
-function handleWebviewMessage(message: { type: string; payload?: unknown }) {
-  switch (message.type) {
-    case 'ad-impression':
-      // Future: log impression, credit tokens
-      console.log('[AgentAds] Ad impression recorded', message.payload);
-      break;
-    case 'ad-click':
-      console.log('[AgentAds] Ad click recorded', message.payload);
-      break;
-    case 'close':
-      hideAdPanel();
-      break;
-  }
-}
-
-// ─── Webview HTML ─────────────────────────────────────────────────────────────
-
-function buildWebviewHtml(
-  _webview: vscode.Webview,
-  adUrl: string,
-  _context: vscode.ExtensionContext
-): string {
-  // CSP: allow iframe from the configured ad URL origin
-  const adOrigin = (() => {
-    try {
-      return new URL(adUrl).origin;
-    } catch {
-      return 'https://raphaelrpais.com';
+function updateStatusBar(active) {
+    if (active) {
+        statusBarItem.text = '$(broadcast) Ads: On';
+        statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     }
-  })();
-
-  return /* html */ `<!DOCTYPE html>
+    else {
+        statusBarItem.text = '$(broadcast) Ads: Off';
+        statusBarItem.backgroundColor = undefined;
+    }
+}
+function handleWebviewMessage(message) {
+    switch (message.type) {
+        case 'ad-impression':
+            // Future: log impression, credit tokens
+            console.log('[AgentAds] Ad impression recorded', message.payload);
+            break;
+        case 'ad-click':
+            console.log('[AgentAds] Ad click recorded', message.payload);
+            break;
+        case 'close':
+            hideAdPanel();
+            break;
+    }
+}
+// ─── Webview HTML ─────────────────────────────────────────────────────────────
+function buildWebviewHtml(_webview, adUrl, _context) {
+    // CSP: allow iframe from the configured ad URL origin
+    const adOrigin = (() => {
+        try {
+            return new URL(adUrl).origin;
+        }
+        catch {
+            return 'https://your-ad-page.com';
+        }
+    })();
+    return /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -376,3 +327,4 @@ function buildWebviewHtml(
 </body>
 </html>`;
 }
+//# sourceMappingURL=extension.js.map
