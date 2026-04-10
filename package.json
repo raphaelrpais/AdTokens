@@ -15,8 +15,17 @@
         "title": "Agent Ads: Mostrar Painel"
       }
     ],
-    "views": {
+    "viewsContainers": {
       "panel": [
+        {
+          "id": "agentAdsContainer",
+          "title": "Agent Ads",
+          "icon": "$(broadcast)"
+        }
+      ]
+    },
+    "views": {
+      "agentAdsContainer": [
         {
           "type": "webview",
           "id": "agentAds.panel",
